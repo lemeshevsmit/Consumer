@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- По убыванию OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL -->
+<!-- Правила вывода журнала Согласно текущему уровню ROOT,
+когда вывод журнала выше корневого уровня по умолчанию, он будет выводиться -->
+<!-- Каждый из следующих фильтров настроен для фильтрации выходных файлов,
+файлы высокого уровня будут отображаться, но информация журнала низкого уровня все равно будет отображаться,
+и только журналы этого уровня будут записаны с помощью фильтрации фильтра -->
+
+<!-- Сканирование описания свойства: если для свойства установлено значение true,
+то при изменении файла конфигурации он будет перезагружен. Значение по умолчанию - true.
+ScanPeriod: установите интервал времени для отслеживания изменений файла конфигурации.
+Единица измерения по умолчанию - миллисекунды. Когда сканирование истинно,
+этот атрибут вступает в силу. По умолчанию интервал времени составляет 1 минуту.
+        debug: если для этого атрибута установлено значение true,
+        внутренняя информация журнала регистрации будет распечатана,
+        а текущий статус регистрации будет просматриваться в реальном времени.
+        Значение по умолчанию неверно. -->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- Определить место ввода файла журнала -->
+    <!-- https://logback.qos.ch/manual/configuration.html#definingPropsOnTheFly -->
+    <property name="log_dir" value="./logs"/>
+    <!-- Самая большая история журнала 30 дней -->
+    <property name="maxHistory" value="30"/>
+
+    <!-- Журнал вывода консоли ConsoleAppender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- Форматировать журнал -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger -%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Журнал уровня ОШИБКИ -->
+    <!-- Прокручивающийся файл записи, сначала запись журнала в указанный файл,
+    при выполнении определенного условия запись журнала в другие файлы RollingFileAppender -->
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Фильтр, только журнал уровня WARN -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <!-- Наиболее часто используемая стратегия прокатки, она основана на времени
+        для разработки стратегии прокатки. Она отвечает как за прокатку, так и за начало прокатки -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Расположение вывода журнала может быть относительным и абсолютным путем -->
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/error-log.log</fileNamePattern>
+            <!-- Необязательный узел, контролируйте максимальное количество сохраняемых архивных файлов,
+             удаляйте старые файлы, если количество превышает это число, предположим,
+             вы установили прокатку каждый месяц, а <maxHistory> равно 6,
+            Сохраняются только файлы за последние 6 месяцев, а старые файлы удаляются.
+            Обратите внимание, что удаление старых файлов означает, что эти каталоги,
+            созданные для архивирования, также будут удалены -->
+            <maxHistory>${maxHistory}</maxHistory>
+        </rollingPolicy>
+
+        <!-- Генерировать файлы журнала в соответствии с режимом фиксированного окна.
+        Если размер файла превышает 20 МБ, создается новый файл журнала.
+        Размер окна от 1 до 3. При сохранении 3 архивных файлов самый старый журнал будет перезаписан. -->
+        <!--
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+        -->
+
+        <!-- Просмотр размера текущего активного файла, если он превышает указанный размер,
+        он уведомит RollingFileAppender, чтобы запустить текущий активный файл для прокрутки -->
+        <!--
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>5MB</maxFileSize>
+        </triggeringPolicy>
+        -->
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Приложение журнала уровня WARN -->
+    <appender name="WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Фильтр, только журнал уровня WARN -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Откатиться ежедневно -->
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/warn-log.log
+            </fileNamePattern>
+            <!-- Самая большая история журнала 60 дней -->
+            <maxHistory>${maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Приложение журнала уровня INFO -->
+    <appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Фильтр, только журнал уровня ИНФОРМАЦИИ -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Откатиться ежедневно -->
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/info-log.log
+            </fileNamePattern>
+            <!-- Самая большая история журнала 60 дней -->
+            <maxHistory>${maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Приложение журнала уровня DEBUG -->
+    <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Фильтр, запись только журналов уровня DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Откатиться ежедневно -->
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/debug-log.log
+            </fileNamePattern>
+            <!-- Самая большая история журнала 60 дней -->
+            <maxHistory>${maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Приложение журнала уровня TRACE -->
+    <appender name="TRACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Фильтр, регистрировать только уровень ОШИБКИ -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>TRACE</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Откатиться ежедневно -->
+            <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/trace-log.log
+            </fileNamePattern>
+            <!-- Самая большая история журнала 60 дней -->
+            <maxHistory>${maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--**class name with package**-->
+    <logger name="com.mycompany.app.Numbers" value="DEBUG" level="DEBUG"/>
+
+    <!-- DEBUG корневого уровня -->
+    <root level="debug">
+        <!-- Вывод в консоль -->
+        <appender-ref ref="STDOUT" />
+        <!-- Вывод в файл -->
+        <appender-ref ref="ERROR" />
+        <appender-ref ref="INFO" />
+        <appender-ref ref="WARN" />
+        <appender-ref ref="DEBUG" />
+        <appender-ref ref="TRACE" />
+    </root>
+</configuration>
